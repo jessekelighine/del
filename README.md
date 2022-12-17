@@ -17,11 +17,11 @@ where `path/to/del.sh` is the path to the downloaded script.
 ```
 usage: del [-dhlru] [file ...]
 flags:
-		-d --directory    show trash directory
-		-h --history      show the last deletion
-		-l --list         list all deleted files
-		-r --remove       permanently remove all deleted files
-		-u --undo         undo the last deletion
+        -d --directory    show trash directory
+        -h --history      show the last deletion
+        -l --list         list all deleted files
+        -r --remove       permanently remove all deleted files
+        -u --undo         undo the last deletion
 ```
 
 - To remove a file, simply do `del file`.
@@ -59,6 +59,5 @@ in your `.bashrc` and simply use `d` to delete!
 
 # License
 
-License: The MIT License (MIT)
-
-Copyright 2022 by Jesse C. Chen
+License: GPL-3</br>
+Copyright 2022 Jesse C. Chen
