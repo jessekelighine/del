@@ -1,8 +1,8 @@
-# `del`: a minimal and safe way of deleting
+# del: a minimal and safe way of deleting
 
 `del` is a simple script that makes deleting files safer.
 `del` is similar to [`trash-cli`](https://github.com/andreafrancia/trash-cli),
-but implemented in less than 100 lines of pure bash script.
+but implemented in less than 100 lines of bash script.
 
 # Installation
 
@@ -30,23 +30,15 @@ flags:
 - To list all the deleted files, do `del -l` or `del --list`.
 - To permanently remove all deleted files, do `del -r` or `del --remove`.
 - To undo the last deletion, do `del -u` or `del --undo`.
+  Only the latest deletion is remembered by `del`.
 
 # Settings
 
 There are three variables that can be customized:
 
-- `DEL_DIR`: designate the trash location/directory.
-- `DEL_HST`: designate a file that stores `del`'s history.
-- `DEL_LST`: designate a command that lists the deleted files.
-
-You can simply use the default values by not assigning the variables.
-Or ,for example, you can put
-```sh
-export DEL_DIR="$HOME/.del"
-export DEL_HST="$DEL_DIR/.del_undo"
-export DEL_LST='ls -a'
-```
-in your `.bashrc`.
+- `DEL_DIR`: designate the trash location/directory. (default: `DEL_DIR="$HOME/.del"`)
+- `DEL_HST`: designate a file that stores `del`'s history. (default: `DEL_HST="$HOME/.del/.del_history"`)
+- `DEL_LST`: designate a command that lists the deleted files. (default: `DEL_LST="find"`)
 
 # Tip
 

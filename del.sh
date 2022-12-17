@@ -24,71 +24,61 @@
 #                                                                             #
 ###############################################################################
 
-[[ -z "$DEL_DIR" ]] && DEL_DIR="$HOME/.del"
-[[ -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
-[[ -z "$DEL_LST" ]] && DEL_LST="find"
+set -e
+is_flag='^-{1,2}[a-zA-Z]+$'
+_guard () { qq="'\''" ; echo "'${1//\'/$qq}'" ; }
 
+[[   -z "$DEL_DIR" ]] && DEL_DIR="$HOME/.del"
+[[   -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
+[[   -z "$DEL_LST" ]] && DEL_LST="find"
 [[ ! -d "$DEL_DIR" ]] && {
 	echo "error: trash directory '$DEL_DIR' not readable."
 	exit 1
 }
 
-### Flags #####################################################################
-
-[[ "$1" == "--directory" || "$1" == "-d" ]] && {
-	echo "$DEL_DIR"
-	exit 0
-}
-
-[[ "$1" == "--history" || "$1" == "-h" ]] && {
-	awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST"
-	exit 0
-}
-
-[[ "$1" == "--list" || "$1" == "-l" ]] && {
-	$DEL_LST "$DEL_DIR"
-	exit 0
-}
-
-[[ "$1" == "--remove" || "$1" == "-r" ]] && {
-	read -r -p "--> permanently remove deleted files [Yn]: "
-	if [[ "$REPLY" == "Y" ]]; then
-		/bin/rm -rf "${DEL_DIR:?}/"*
-		echo "removed"
-	else
-		echo "cancelled"
-	fi
-	exit 0
-}
-
-[[ "$1" == "--undo" || "$1" == "-u" ]] && {
-	if [[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]]; then
-		echo "error: no undo history available."
-		exit 1
-	fi
-	cat "$DEL_HST" | xargs -n 2 mv
-	true > "$DEL_HST"
-	exit 0
-}
-
 ### Help ######################################################################
 
 [[ $# -lt 1 ]] && {
-	echo "usage: del [-dhlru] [file ...]                                 "
-	echo "flags:                                                         "
-	echo "        -d --directory    show trash directory                 "
-	echo "        -h --history      show the last deletion               "
-	echo "        -l --list         list all deleted files               "
-	echo "        -r --remove       permanently remove all deleted files "
-	echo "        -u --undo         undo the last deletion               "
+	cat << EOF
+usage: del [-dhlru] [file ...]
+flags:
+        -d --directory    show trash directory
+        -h --history      show the last deletion
+        -l --list         list all deleted files
+        -r --remove       permanently remove all deleted files
+        -u --undo         undo the last deletion
+EOF
+	exit 0
+}
+
+### Flags #####################################################################
+
+[[ $# -eq 1 && "$1" =~ $is_flag ]] && {
+	case "$1" in
+		-d | --directory)
+			echo "$DEL_DIR" ;;
+		-h | --history)
+			awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST" ;;
+		-l | --list)
+			$DEL_LST "$DEL_DIR" ;;
+		-r | --remove)
+			read -r -p "--> permanently remove deleted files [Yn]: "
+			[[ "$REPLY" =~ [yY] ]] && /bin/rm -rf "${DEL_DIR:?}/"* ;;
+		-u | --undo)
+			if [[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]]; then
+				echo "error: no undo history available."
+				exit 1
+			fi
+			cat "$DEL_HST" | xargs -n 2 mv
+			true > "$DEL_HST" ;;
+		*)
+			echo "del: unrecognized flag."
+			exit 1 ;;
+	esac
 	exit 0
 }
 
 ### Main ######################################################################
-
-_guard () { qq="'\''"; echo "'${1//\'/$qq}'"; }
-
-set -e
 
 true > "$DEL_HST"
 for file in "$@"; do
@@ -98,12 +88,12 @@ for file in "$@"; do
 		echo "$orig" "$dump" | xargs -n 2 mv
 		echo "$dump	$orig" >> "${DEL_HST}"
 	else
-		if [[ "$file" =~ ^-{1,2}[a-z]+$ ]]; then
-			echo "unrecognized flag."
+		if [[ "$file" =~ $is_flag ]]; then
+			echo "error: wrong usage of flag."
 		else
-			echo "file '$file' not regular."
+			echo "error: file $(_guard "$file") not regular."
 		fi
+		exit 1
 	fi
 done
-
 exit 0
