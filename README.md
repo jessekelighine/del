@@ -60,4 +60,5 @@ in your `.bashrc` and simply use `d` to delete!
 # License
 
 License: The MIT License (MIT)
+
 Copyright 2022 by Jesse C. Chen
