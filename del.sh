@@ -25,8 +25,6 @@
 ###############################################################################
 
 set -e
-is_flag='^-{1,2}[a-zA-Z]+$'
-_guard () { qq="'\''" ; echo "'${1//\'/$qq}'" ; }
 
 [[   -z "$DEL_DIR" ]] && DEL_DIR="$HOME/.del"
 [[   -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
@@ -53,7 +51,7 @@ EOF
 
 ### Flags #####################################################################
 
-[[ $# -eq 1 && "$1" =~ $is_flag ]] && {
+[[ $# -eq 1 && "$1" =~ ^-{1,2}[a-zA-Z]+$ ]] && {
 	case "$1" in
 		-d | --directory)
 			echo "$DEL_DIR" ;;
@@ -82,18 +80,21 @@ EOF
 
 true > "$DEL_HST"
 for file in "$@"; do
-	if [[ -f "$file" || -d "$file" ]]; then
-		orig=$(_guard "$(realpath "$file")")
-		dump=$(_guard "$DEL_DIR/$(basename "$file")")
-		echo "$orig" "$dump" | xargs -n 2 mv
-		echo "$dump	$orig" >> "${DEL_HST}"
-	else
-		if [[ "$file" =~ $is_flag ]]; then
-			echo "error: wrong usage of flag."
-		else
-			echo "error: file $(_guard "$file") not regular."
-		fi
+	[[ ! -f "$file" && ! -d "$file" ]] && {
+		echo "error: file/directory '$file' not regular."
 		exit 1
-	fi
+	}
+	orig="$(realpath "$file")"
+	dump="$DEL_DIR/$(basename "$file")"
+	[[ -d "$dump" || -f "$dump" ]] && {
+		rename="$dump-${count:=1}"
+		while [[ -d "$rename" || -f "$rename" ]]; do
+			count=$(( count + 1 ))
+			rename="$dump-$count"
+		done
+		mv "$dump" "$rename"
+	}
+	mv "$orig" "$dump"
+	echo "$dump	$orig" >> "${DEL_HST}"
 done
 exit 0
