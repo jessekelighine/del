@@ -30,7 +30,7 @@ set -e
 [[   -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
 [[   -z "$DEL_LST" ]] && DEL_LST="find"
 [[ ! -d "$DEL_DIR" ]] && {
-	echo "error: trash directory '$DEL_DIR' not readable."
+	echo "del: error: trash directory '$DEL_DIR' not readable."
 	exit 1
 }
 
@@ -63,14 +63,14 @@ EOF
 			read -r -p "--> permanently remove deleted files [Yn]: "
 			[[ "$REPLY" =~ [yY] ]] && /bin/rm -rf "${DEL_DIR:?}/"* ;;
 		-u | --undo)
-			if [[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]]; then
-				echo "error: no undo history available."
+			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
+				echo "del: error: no undo history available."
 				exit 1
-			fi
+			}
 			cat "$DEL_HST" | xargs -n 2 mv
 			true > "$DEL_HST" ;;
 		*)
-			echo "del: unrecognized flag."
+			echo "del: error: unrecognized flag."
 			exit 1 ;;
 	esac
 	exit 0
@@ -78,21 +78,29 @@ EOF
 
 ### Main ######################################################################
 
+_rename () {
+	if [[ "${body:=$(basename "$1")}" == *\.* && ! -z "${body%.*}" ]]; then
+		extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
+		echo "$(dirname "$1" | xargs realpath)/${body%.*}-$2.$extn"
+	else
+		echo "$1-$2"
+	fi
+}
+
 true > "$DEL_HST"
 for file in "$@"; do
 	[[ ! -f "$file" && ! -d "$file" ]] && {
-		echo "error: file/directory '$file' not regular."
+		echo "del: error: file/directory '$file' not regular."
 		exit 1
 	}
 	orig="$(realpath "$file")"
 	dump="$DEL_DIR/$(basename "$file")"
 	[[ -d "$dump" || -f "$dump" ]] && {
-		rename="$dump-${count:=1}"
-		while [[ -d "$rename" || -f "$rename" ]]; do
-			count=$(( count + 1 ))
-			rename="$dump-$count"
+		temp=$(_rename "$dump" "1"); cnt=1
+		while [[ -d "$temp" || -f "$temp" ]]; do
+			temp=$(_rename "$dump" "$((cnt+1))"); cnt=$((cnt+1))
 		done
-		mv "$dump" "$rename"
+		mv "$dump" "$temp"
 	}
 	mv "$orig" "$dump"
 	echo "$dump	$orig" >> "${DEL_HST}"
