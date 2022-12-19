@@ -61,7 +61,10 @@ EOF
 			$DEL_LST "$DEL_DIR" ;;
 		-r | --remove)
 			read -r -p "permanently remove deleted files [Yn]: "
-			[[ "$REPLY" =~ [yY] ]] && \rm -rf "${DEL_DIR:?}/"* ;;
+			[[ "$REPLY" =~ [yY] ]] && {
+				\rm -rf "${DEL_DIR:?}"
+				mkdir "$DEL_DIR"
+			} ;;
 		-u | --undo)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
 				echo "del: error: no undo history available."
@@ -80,9 +83,9 @@ EOF
 
 _quotes () { local qq="'\\''"; echo "'${1//\'/$qq}'"; }
 _redump () {
-	local body=$(basename "$1")
-	if [[ "$body" == *\.* && ! -z "${body%.*}" ]]; then
-		local extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
+	local body; body=$(basename "$1")
+	if [[ "$body" == *\.* && -n "${body%.*}" ]]; then
+		local extn; extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
 		redump="$(dirname "$1" | xargs realpath)/${body%.*}-$2.$extn"
 	else
 		redump="$1-$2"
