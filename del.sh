@@ -60,8 +60,8 @@ EOF
 		-l | --list)
 			$DEL_LST "$DEL_DIR" ;;
 		-r | --remove)
-			read -r -p "--> permanently remove deleted files [Yn]: "
-			[[ "$REPLY" =~ [yY] ]] && /bin/rm -rf "${DEL_DIR:?}/"* ;;
+			read -r -p "permanently remove deleted files [Yn]: "
+			[[ "$REPLY" =~ [yY] ]] && \rm -rf "${DEL_DIR:?}/"* ;;
 		-u | --undo)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
 				echo "del: error: no undo history available."
@@ -78,12 +78,14 @@ EOF
 
 ### Main ######################################################################
 
-_rename () {
-	if [[ "${body:=$(basename "$1")}" == *\.* && ! -z "${body%.*}" ]]; then
-		extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
-		echo "$(dirname "$1" | xargs realpath)/${body%.*}-$2.$extn"
+_quotes () { local qq="'\\''"; echo "'${1//\'/$qq}'"; }
+_redump () {
+	local body=$(basename "$1")
+	if [[ "$body" == *\.* && ! -z "${body%.*}" ]]; then
+		local extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
+		redump="$(dirname "$1" | xargs realpath)/${body%.*}-$2.$extn"
 	else
-		echo "$1-$2"
+		redump="$1-$2"
 	fi
 }
 
@@ -96,13 +98,13 @@ for file in "$@"; do
 	orig="$(realpath "$file")"
 	dump="$DEL_DIR/$(basename "$file")"
 	[[ -d "$dump" || -f "$dump" ]] && {
-		temp=$(_rename "$dump" "1"); cnt=1
-		while [[ -d "$temp" || -f "$temp" ]]; do
-			temp=$(_rename "$dump" "$((cnt+1))"); cnt=$((cnt+1))
+		while : ; do
+			_redump "$dump" "$((++cnt))"
+			[[ ! -d "$redump" && ! -f "$redump" ]] && cnt=0 && break
 		done
-		mv "$dump" "$temp"
+		mv "$dump" "$redump"
 	}
 	mv "$orig" "$dump"
-	echo "$dump	$orig" >> "${DEL_HST}"
+	echo "$(_quotes "$dump")	$(_quotes "$orig")" >> "$DEL_HST"
 done
 exit 0
