@@ -4,7 +4,7 @@
 # -*- encoding: UTF-8 -*-                                                     #
 # Author: Jesse C. Chen  (jessekelighine@gmail.com)                           #
 # Description: `del`, a better and safer way to remove files.                 #
-# Last Modified: 2022-Dec-17                                                  #
+# Last Modified: 2022-Dec-21                                                  #
 #                                                                             #
 # License: GPL-3                                                              #
 # Copyright 2022 Jesse C. Chen                                                #
@@ -34,6 +34,27 @@ set -e
 	exit 1
 }
 
+### Functions #################################################################
+
+_errors () {
+	echo "del: error: $*" >&2
+}
+
+_quotes () {
+	local qq="'\\''"
+	echo "'${1//\'/$qq}'"
+}
+
+_redump () {
+	local body; body=$(basename "$1")
+	if [[ "$body" == *\.* && -n "${body%.*}" ]]; then
+		local extn; extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
+		redump="$(dirname "$1" | xargs realpath)/${body%.*}-$2.$extn"
+	else
+		redump="$1-$2"
+	fi
+}
+
 ### Help ######################################################################
 
 [[ $# -lt 1 ]] && {
@@ -54,56 +75,49 @@ EOF
 [[ $# -eq 1 && "$1" =~ ^-{1,2}[a-zA-Z]+$ ]] && {
 	case "$1" in
 		-d | --directory)
-			echo "$DEL_DIR" ;;
+			echo "$DEL_DIR"
+			;;
 		-h | --history)
-			awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST" ;;
+			awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST"
+			;;
 		-l | --list)
-			$DEL_LST "$DEL_DIR" ;;
+			$DEL_LST "$DEL_DIR"
+			;;
 		-r | --remove)
 			read -r -p "permanently remove deleted files [Yn]: "
-			[[ "$REPLY" =~ [yY] ]] && {
-				\rm -rf "${DEL_DIR:?}"
-				mkdir "$DEL_DIR"
-			} ;;
+			[[ "$REPLY" =~ [yY] ]] && \rm -rf "${DEL_DIR:?}/"*
+			;;
 		-u | --undo)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
-				echo "del: error: no undo history available."
+				_errors "no undo history available."
 				exit 1
 			}
 			cat "$DEL_HST" | xargs -n 2 mv
-			true > "$DEL_HST" ;;
+			true > "$DEL_HST"
+			;;
 		*)
-			echo "del: error: unrecognized flag."
-			exit 1 ;;
+			_errors "unrecognized flag."
+			exit 1
+			;;
 	esac
 	exit 0
 }
 
 ### Main ######################################################################
 
-_quotes () { local qq="'\\''"; echo "'${1//\'/$qq}'"; }
-_redump () {
-	local body; body=$(basename "$1")
-	if [[ "$body" == *\.* && -n "${body%.*}" ]]; then
-		local extn; extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
-		redump="$(dirname "$1" | xargs realpath)/${body%.*}-$2.$extn"
-	else
-		redump="$1-$2"
-	fi
-}
-
 true > "$DEL_HST"
 for file in "$@"; do
 	[[ ! -f "$file" && ! -d "$file" ]] && {
-		echo "del: error: file/directory '$file' not regular."
+		_errors "file/directory '$file' not regular."
 		exit 1
 	}
 	orig="$(realpath "$file")"
 	dump="$DEL_DIR/$(basename "$file")"
 	[[ -d "$dump" || -f "$dump" ]] && {
+		cnt=0
 		while : ; do
 			_redump "$dump" "$((++cnt))"
-			[[ ! -d "$redump" && ! -f "$redump" ]] && cnt=0 && break
+			[[ ! -d "$redump" && ! -f "$redump" ]] && break
 		done
 		mv "$dump" "$redump"
 	}
