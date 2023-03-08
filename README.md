@@ -15,8 +15,8 @@ where `path/to/del.sh` is the path to the downloaded script.
 ## Usage
 
 ```
-usage: del [-dhlru] [file ...]
-flags:
+usage: del [options] [file ...]
+options:
         -d --directory    show trash directory
         -h --history      show the last deletion
         -l --list         list all deleted files

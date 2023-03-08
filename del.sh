@@ -4,7 +4,7 @@
 # -*- encoding: UTF-8 -*-                                                     #
 # Author: Jesse C. Chen  (jessekelighine@gmail.com)                           #
 # Description: `del`, a better and safer way to remove files.                 #
-# Last Modified: 2022-Dec-21                                                  #
+# Last Modified: 2023-03-08                                                   #
 #                                                                             #
 # License: GPL-3                                                              #
 # Copyright 2022 Jesse C. Chen                                                #
@@ -41,17 +41,17 @@ _errors () {
 }
 
 _quotes () {
-	local qq="'\\''"
-	echo "'${1//\'/$qq}'"
+	local qq="'\\''"; echo "'${1//\'/$qq}'"
 }
 
 _redump () {
-	local body; body=$(basename "$1")
-	if [[ "$body" == *\.* && -n "${body%.*}" ]]; then
-		local extn; extn=$(rev <<< "$body" | cut -f 1 -d '.' | rev)
-		redump="$(dirname "$1" | xargs realpath)/${body%.*}-$2.$extn"
-	else
-		redump="$1-$2"
+	local file; file=$( basename "$1" )
+	local dirn; dirn=$( dirname  "$1" )
+	local body; body=$( cut -f 1 -d '.' <<< "$file" )
+	local extn; extn="${file/$body/}"
+	if [[ -z "$body" ]];
+	then redump="$dirn/$extn-$2"
+	else redump="$dirn/$body-$2$extn"
 	fi
 }
 
@@ -59,8 +59,8 @@ _redump () {
 
 [[ $# -lt 1 ]] && {
 	cat << EOF
-usage: del [-dhlru] [file ...]
-flags:
+usage: del [options] [file ...]
+options:
         -d --directory    show trash directory
         -h --history      show the last deletion
         -l --list         list all deleted files
@@ -108,20 +108,23 @@ EOF
 true > "$DEL_HST"
 for file in "$@"; do
 	[[ ! -f "$file" && ! -d "$file" ]] && {
-		_errors "file/directory '$file' not regular."
+		_errors "file/directory \`$file\` not regular."
 		exit 1
 	}
-	orig="$(realpath "$file")"
+	orig=$(realpath "$file")
 	dump="$DEL_DIR/$(basename "$file")"
 	[[ -d "$dump" || -f "$dump" ]] && {
-		cnt=0
+		count=0
+		_redump "$dump" "$(date +'%Y%m%d%H%M%S')"
+		dump="$redump"
 		while : ; do
-			_redump "$dump" "$((++cnt))"
 			[[ ! -d "$redump" && ! -f "$redump" ]] && break
+			_redump "$dump" "$((++count))"
 		done
-		mv "$dump" "$redump"
+		dump="$redump"
 	}
 	mv "$orig" "$dump"
 	echo "$(_quotes "$dump")	$(_quotes "$orig")" >> "$DEL_HST"
 done
+
 exit 0
