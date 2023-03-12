@@ -49,7 +49,7 @@ _redump () {
 	local dirn; dirn=$( dirname  "$1" )
 	local body; body=$( cut -f 1 -d '.' <<< "$file" )
 	local extn; extn="${file/$body/}"
-	if [[ -z "$body" ]];
+	if [[ -z "$body" ]]
 	then redump="$dirn/$extn-$2"
 	else redump="$dirn/$body-$2$extn"
 	fi
@@ -114,11 +114,10 @@ for file in "$@"; do
 	orig=$(realpath "$file")
 	dump="$DEL_DIR/$(basename "$file")"
 	[[ -d "$dump" || -f "$dump" ]] && {
-		count=0
 		_redump "$dump" "$(date +'%Y%m%d%H%M%S')"
+		count=0
 		dump="$redump"
-		while : ; do
-			[[ ! -d "$redump" && ! -f "$redump" ]] && break
+		while [[ -d "$redump" || -f "$redump" ]] ; do
 			_redump "$dump" "$((++count))"
 		done
 		dump="$redump"
