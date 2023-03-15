@@ -7,7 +7,7 @@
 # Last Modified: 2023-03-08                                                   #
 #                                                                             #
 # License: GPL-3                                                              #
-# Copyright 2022 Jesse C. Chen                                                #
+# Copyright 2022-2023 Jesse C. Chen                                           #
 #                                                                             #
 # This program is free software: you can redistribute it and/or modify it     #
 # under the terms of the GNU General Public License as published by the Free  #
@@ -46,7 +46,7 @@ _quotes () {
 
 _redump () {
 	local file; file=$( basename "$1" )
-	local dirn; dirn=$( dirname  "$1" ); [[ "$dirn" == "/" ]] && dirn="";
+	local dirn; dirn=$( dirname  "$1" )
 	local body; body="${file%%.*}"
 	local extn; extn="${file#$body}"
 	if [[ ! -z "$body" ]]; then
