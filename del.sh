@@ -47,11 +47,13 @@ _quotes () {
 _redump () {
 	local file; file=$( basename "$1" )
 	local dirn; dirn=$( dirname  "$1" )
-	local body; body=$( cut -f 1 -d '.' <<< "$file" )
-	local extn; extn="${file/$body/}"
-	if [[ -z "$body" ]]
-	then redump="$dirn/$extn-$2"
-	else redump="$dirn/$body-$2$extn"
+	local body; body="${file%%.*}"
+	local extn; extn="${file#$body}"
+	if [[ ! -z "$body" ]]; then
+		redump="$dirn/$body-$2$extn"
+	else
+		_redump "${extn:1}" "$2"
+		redump="$dirn/.$(basename "$redump")"
 	fi
 }
 
