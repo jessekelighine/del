@@ -46,7 +46,7 @@ _quotes () {
 
 _redump () {
 	local file; file=$( basename "$1" )
-	local dirn; dirn=$( dirname  "$1" )
+	local dirn; dirn=$( dirname  "$1" ); [[ "$dirn" == "/" ]] && dirn="";
 	local body; body="${file%%.*}"
 	local extn; extn="${file#$body}"
 	if [[ ! -z "$body" ]]; then
