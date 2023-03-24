@@ -4,7 +4,7 @@
 # -*- encoding: UTF-8 -*-                                                     #
 # Author: Jesse C. Chen  (jessekelighine@gmail.com)                           #
 # Description: `del`, a better and safer way to remove files.                 #
-# Last Modified: 2023-03-08                                                   #
+# Last Modified: 2023-03-17                                                   #
 #                                                                             #
 # License: GPL-3                                                              #
 # Copyright 2022-2023 Jesse C. Chen                                           #
