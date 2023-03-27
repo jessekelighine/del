@@ -79,15 +79,19 @@ EOF
 		-d | --directory)
 			echo "$DEL_DIR"
 			;;
-		-h | --history)
-			awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST"
-			;;
 		-l | --list)
 			$DEL_LST "$DEL_DIR"
 			;;
 		-r | --remove)
 			read -r -p "permanently remove deleted files [Yn]: "
 			[[ "$REPLY" =~ [yY] ]] && \rm -rf "${DEL_DIR:?}/"*
+			;;
+		-h | --history)
+			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
+				_errors "no undo history available"
+				exit 1
+			}
+			awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST"
 			;;
 		-u | --undo)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
