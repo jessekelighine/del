@@ -4,35 +4,13 @@
 # -*- encoding: UTF-8 -*-                                                     #
 # Author: Jesse C. Chen  (jessekelighine@gmail.com)                           #
 # Description: `del`, a better and safer way to remove files.                 #
-# Last Modified: 2023-03-17                                                   #
+# Last Modified: 2023-04-16                                                   #
 #                                                                             #
 # License: GPL-3                                                              #
 # Copyright 2022-2023 Jesse C. Chen                                           #
-#                                                                             #
-# This program is free software: you can redistribute it and/or modify it     #
-# under the terms of the GNU General Public License as published by the Free  #
-# Software Foundation, either version 3 of the License, or (at your option)   #
-# any later version.                                                          #
-#                                                                             #
-# This program is distributed in the hope that it will be useful, but         #
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  #
-# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License     #
-# for more details.                                                           #
-#                                                                             #
-# You should have received a copy of the GNU General Public License along     #
-# with this program. If not, see <https://www.gnu.org/licenses/>.             #
-#                                                                             #
 ###############################################################################
 
 set -e
-
-[[   -z "$DEL_DIR" ]] && DEL_DIR="$HOME/.del"
-[[   -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
-[[   -z "$DEL_LST" ]] && DEL_LST="find"
-[[ ! -d "$DEL_DIR" ]] && {
-	echo "del: error: trash directory '$DEL_DIR' not readable."
-	exit 1
-}
 
 ### Functions #################################################################
 
@@ -55,6 +33,16 @@ _redump () {
 		_redump "${extn:1}" "$2"
 		redump="$dirn/.$(basename "$redump")"
 	fi
+}
+
+### Environmental Variables ###################################################
+
+[[   -z "$DEL_DIR" ]] && DEL_DIR="$HOME/.del"
+[[   -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
+[[   -z "$DEL_LST" ]] && DEL_LST="find"
+[[ ! -d "$DEL_DIR" ]] && {
+	_errors "trash directory '$DEL_DIR' not readable."
+	exit 1
 }
 
 ### Help ######################################################################
@@ -106,7 +94,7 @@ EOF
 			exit 1
 			;;
 	esac
-	exit 0
+	exit 1
 }
 
 ### Main ######################################################################
