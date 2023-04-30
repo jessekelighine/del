@@ -37,7 +37,7 @@ _redump () {
 
 ### Environmental Variables ###################################################
 
-[[   -z "$DEL_DIR" ]] && DEL_DIR="$HOME/.del"
+[[   -z "$DEL_DIR" ]] && DEL_DIR="$HOME/.Trash"
 [[   -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
 [[   -z "$DEL_LST" ]] && DEL_LST="find"
 [[ ! -d "$DEL_DIR" ]] && {
