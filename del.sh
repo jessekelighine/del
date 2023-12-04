@@ -54,7 +54,7 @@ options:
         -d --directory    show trash directory
         -h --history      show the last deletion
         -l --list         list all deleted files
-        -r --remove       permanently remove all deleted files
+	-r --remove       permanently remove all deleted files (plz don't use this)
         -u --undo         undo the last deletion
 EOF
 	exit 0
