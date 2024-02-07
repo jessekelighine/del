@@ -51,10 +51,11 @@ _redump () {
 	cat << EOF
 usage: del [options] [file ...]
 options:
+        -a --append       append deletion to history
         -d --directory    show trash directory
         -h --history      show the last deletion
         -l --list         list all deleted files
-	-r --remove       permanently remove all deleted files (plz don't use this)
+        -r --remove       permanently remove all deleted files (plz don't use this)
         -u --undo         undo the last deletion
 EOF
 	exit 0
@@ -62,17 +63,28 @@ EOF
 
 ### Flags #####################################################################
 
-[[ $# -eq 1 && "$1" =~ ^-{1,2}[a-zA-Z]+$ ]] && {
+append_hist=false
+positional_args=()
+
+while [[ $# -gt 0 ]]
+do
 	case "$1" in
+		-a | --append)
+			append_hist=true
+			shift
+			;;
 		-d | --directory)
 			echo "$DEL_DIR"
+			exit 0
 			;;
 		-l | --list)
 			$DEL_LST "$DEL_DIR"
+			exit 0
 			;;
 		-r | --remove)
 			read -r -p "permanently remove deleted files [Yn]: "
 			[[ "$REPLY" =~ [yY] ]] && \rm -rf "${DEL_DIR:?}/"*
+			exit 0
 			;;
 		-h | --history)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
@@ -80,6 +92,7 @@ EOF
 				exit 1
 			}
 			awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST"
+			exit 0
 			;;
 		-u | --undo)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
@@ -88,18 +101,24 @@ EOF
 			}
 			cat "$DEL_HST" | xargs -n 2 mv
 			true > "$DEL_HST"
+			exit 0
 			;;
-		*)
-			_errors "unrecognized flag."
+		-* | --*)
+			_errors "unknown option $1."
 			exit 1
 			;;
+		*)
+			positional_args+=("$1")
+			shift
+			;;
 	esac
-	exit 1
-}
+done
+
+set -- "${positional_args[@]}"
 
 ### Main ######################################################################
 
-true > "$DEL_HST"
+[[ $append_hist != true ]] && true > "$DEL_HST"
 for file in "$@"; do
 	[[ ! -f "$file" && ! -d "$file" ]] && {
 		_errors "file/directory \`$file\` not regular."

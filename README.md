@@ -37,7 +37,7 @@ options:
 
 There are three variables that can be customized:
 
-- `DEL_DIR`: designate the trash location/directory. (default: `DEL_DIR="$HOME/.del"`)
+- `DEL_DIR`: designate the trash location/directory. (default: `DEL_DIR="$HOME/.Trash"`)
 - `DEL_HST`: designate a file that stores `del`'s history. (default: `DEL_HST="$HOME/.del/.del_history"`)
 - `DEL_LST`: designate a command that lists the deleted files. (default: `DEL_LST="find"`)
 
