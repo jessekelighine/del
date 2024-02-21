@@ -2,7 +2,7 @@
 
 ###############################################################################
 # -*- encoding: UTF-8 -*-                                                     #
-# Author: Jesse C. Chen  (jessekelighine@gmail.com)                           #
+# Author: Jesse C. Chen  (jessekelighine.com)                                 #
 # Description: `del`, a better and safer way to remove files.                 #
 # Last Modified: 2024-02-14                                                   #
 #                                                                             #
@@ -55,7 +55,7 @@ options:
         -d --directory    show trash directory
         -h --history      show the last deletion
         -l --list         list all deleted files
-        -r --remove       permanently remove all deleted files (plz don't use this)
+	-r --remove       show the command to rm all deleted files
         -u --undo         undo the last deletion
 EOF
 	exit 0
@@ -82,8 +82,7 @@ do
 			exit 0
 			;;
 		-r | --remove)
-			read -r -p "permanently remove deleted files [Yn]: "
-			[[ "$REPLY" =~ [yY] ]] && \rm -rf "${DEL_DIR:?}/"*
+			printf "$(basename $0): rm -rf %s/*\n" "$DEL_DIR"
 			exit 0
 			;;
 		-h | --history)
