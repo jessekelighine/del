@@ -4,7 +4,7 @@
 # -*- encoding: UTF-8 -*-                                                     #
 # Author: Jesse C. Chen  (jessekelighine.com)                                 #
 # Description: `del`, a better and safer way to remove files.                 #
-# Last Modified: 2024-02-14                                                   #
+# Last Modified: 2024-02-26                                                   #
 #                                                                             #
 # License: GPL-3                                                              #
 # Copyright 2022-2024 Jesse C. Chen                                           #
@@ -14,23 +14,23 @@ set -e
 
 ### Functions #################################################################
 
-_errors () {
+Errors () {
 	echo "del: error: $*" >&2
 }
 
-_quotes () {
+Quotes () {
 	local qq="'\\''"; echo "'${1//\'/$qq}'"
 }
 
-_redump () {
-	local file; file=$( basename "$1" )
-	local dirn; dirn=$( dirname  "$1" )
+Redump () {
+	local file; file=$(basename "$1")
+	local dirn; dirn=$(dirname  "$1")
 	local body; body="${file%%.*}"
 	local extn; extn="${file#$body}"
 	if [[ ! -z "$body" ]]; then
 		redump="$dirn/$body-$2$extn"
 	else
-		_redump "${extn:1}" "$2"
+		Redump "${extn:1}" "$2"
 		redump="$dirn/.$(basename "$redump")"
 	fi
 }
@@ -41,7 +41,7 @@ _redump () {
 [[   -z "$DEL_HST" ]] && DEL_HST="$DEL_DIR/.del_history"
 [[   -z "$DEL_LST" ]] && DEL_LST="find"
 [[ ! -d "$DEL_DIR" ]] && {
-	_errors "trash directory '$DEL_DIR' not readable."
+	Errors "trash directory '$DEL_DIR' not readable."
 	exit 1
 }
 
@@ -49,8 +49,8 @@ _redump () {
 
 [[ $# -lt 1 ]] && {
 	cat << EOF
-usage: del [options] [file ...]
-options:
+$(tput bold)usage$(tput sgr0): del [options] [file ...]
+$(tput bold)options$(tput sgr0):
         -a --append       append deletion to history
         -d --directory    show trash directory
         -h --history      show the last deletion
@@ -87,7 +87,7 @@ do
 			;;
 		-h | --history)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
-				_errors "no undo history available"
+				Errors "no undo history available"
 				exit 1
 			}
 			awk 'BEGIN { FS="\t" } { print $2 }' "$DEL_HST"
@@ -95,7 +95,7 @@ do
 			;;
 		-u | --undo)
 			[[ ! -s "$DEL_HST" || ! -f "$DEL_HST" ]] && {
-				_errors "no undo history available."
+				Errors "no undo history available."
 				exit 1
 			}
 			cat "$DEL_HST" | xargs -n 2 mv
@@ -103,7 +103,7 @@ do
 			exit 0
 			;;
 		-* | --*)
-			_errors "unknown option $1."
+			Errors "unknown option $1."
 			exit 1
 			;;
 		*)
@@ -120,22 +120,22 @@ set -- "${positional_args[@]}"
 [[ $append_hist != true ]] && true > "$DEL_HST"
 for file in "$@"; do
 	[[ ! -f "$file" && ! -d "$file" ]] && {
-		_errors "file/directory \`$file\` not regular."
+		Errors "file/directory \`$file\` not regular."
 		exit 1
 	}
 	orig=$(realpath "$file")
 	dump="$DEL_DIR/$(basename "$file")"
 	[[ -d "$dump" || -f "$dump" ]] && {
-		_redump "$dump" "$(date +'%Y%m%d%H%M%S')"
+		Redump "$dump" "$(date +'%Y%m%d%H%M%S')"
 		count=0
 		dump="$redump"
 		while [[ -d "$redump" || -f "$redump" ]] ; do
-			_redump "$dump" "$((++count))"
+			Redump "$dump" "$((++count))"
 		done
 		dump="$redump"
 	}
 	mv "$orig" "$dump"
-	echo "$(_quotes "$dump")	$(_quotes "$orig")" >> "$DEL_HST"
+	echo "$(Quotes "$dump")	$(Quotes "$orig")" >> "$DEL_HST"
 done
 
 exit 0
