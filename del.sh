@@ -124,6 +124,9 @@ for file in "$@"; do
 		exit 1
 	}
 	orig=$(realpath "$file")
+	[[ -L "$file" ]] && {
+		orig="$(realpath "$(dirname "$file")")/$(basename "$file")"
+	}
 	dump="$DEL_DIR/$(basename "$file")"
 	[[ -d "$dump" || -f "$dump" ]] && {
 		Redump "$dump" "$(date +'%Y%m%d%H%M%S')"
