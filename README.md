@@ -20,9 +20,10 @@ usage: del [options] [file ...]
 options:
         -a --append       append deletion to history
         -d --directory    show trash directory
+        -f --flush        flush deletion history
         -h --history      show the last deletion
         -l --list         list all deleted files
-        -r --remove       permanently remove all deleted files (plz don't use this)
+        -r --remove       show the command to remove all deleted files
         -u --undo         undo the last deletion
 ```
 
@@ -55,7 +56,7 @@ in your `.bashrc` and simply use `d` to delete!
 
 It is **not** recommended that you alias `rm` to `del` since this prevents you from using `rm` carefully.
 This will ultimately lead to disaster on another machine that does not have this alias.
-I recommend [this tip](https://github.com/andreafrancia/trash-cli#but-sometimes-i-forget-to-use-trash-put-really-cant-i)
+I recommend [this tip](https://github.com/andreafrancia/trash-cli#can-i-alias-rm-to-trash-put)
 from [`trash-cli`](https://github.com/andreafrancia/trash-cli)
 to break the habit of using `rm` without thinking.
 
@@ -70,4 +71,4 @@ deletes everything on the desktop.
 ## License
 
 License: GPL-3</br>
-Copyright 2022-2023 Jesse C. Chen
+Copyright 2022-2025 Jesse C. Chen

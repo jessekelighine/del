@@ -1,18 +1,32 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
 # -*- encoding: UTF-8 -*-                                                     #
 # Author: Jesse C. Chen  (jessekelighine.com)                                 #
 # Description: `del`, a better and safer way to remove files.                 #
-# Last Modified: 2024-02-26                                                   #
+# Last Modified: 2025-03-09                                                   #
 #                                                                             #
 # License: GPL-3                                                              #
-# Copyright 2022-2024 Jesse C. Chen                                           #
+# Copyright 2022-2025 Jesse C. Chen                                           #
 ###############################################################################
 
 set -e
 
 ### Functions #################################################################
+
+Message () {
+	cat << EOF
+usage: del [options] [file ...]
+options:
+        -a --append       append deletion to history
+        -d --directory    show trash directory
+        -f --flush        flush deletion history
+        -h --history      show the last deletion
+        -l --list         list all deleted files
+        -r --remove       show the command to remove all deleted files
+        -u --undo         undo the last deletion
+EOF
+}
 
 Errors () {
 	echo "del: error: $*" >&2
@@ -26,8 +40,8 @@ Redump () {
 	local file; file=$(basename "$1")
 	local dirn; dirn=$(dirname  "$1")
 	local body; body="${file%%.*}"
-	local extn; extn="${file#$body}"
-	if [[ ! -z "$body" ]]; then
+	local extn; extn="${file#"$body"}"
+	if [[ -n "$body" ]]; then
 		redump="$dirn/$body-$2$extn"
 	else
 		Redump "${extn:1}" "$2"
@@ -45,22 +59,6 @@ Redump () {
 	exit 1
 }
 
-### Help ######################################################################
-
-[[ $# -lt 1 ]] && {
-	cat << EOF
-$(tput bold)usage$(tput sgr0): del [options] [file ...]
-$(tput bold)options$(tput sgr0):
-        -a --append       append deletion to history
-        -d --directory    show trash directory
-        -h --history      show the last deletion
-        -l --list         list all deleted files
-	-r --remove       show the command to rm all deleted files
-        -u --undo         undo the last deletion
-EOF
-	exit 0
-}
-
 ### Flags #####################################################################
 
 append_hist=false
@@ -73,6 +71,10 @@ do
 			append_hist=true
 			shift
 			;;
+		-f | --flush)
+			true > "$DEL_HST"
+			exit 0
+			;;
 		-d | --directory)
 			echo "$DEL_DIR"
 			exit 0
@@ -82,7 +84,7 @@ do
 			exit 0
 			;;
 		-r | --remove)
-			printf "$(basename $0): rm -rf %s/*\n" "$DEL_DIR"
+			printf "rm -rf %s/*\n" "$DEL_DIR"
 			exit 0
 			;;
 		-h | --history)
@@ -102,7 +104,7 @@ do
 			true > "$DEL_HST"
 			exit 0
 			;;
-		-* | --*)
+		-*)
 			Errors "unknown option $1."
 			exit 1
 			;;
@@ -116,6 +118,11 @@ done
 set -- "${positional_args[@]}"
 
 ### Main ######################################################################
+
+[[ $# -lt 1 ]] && {
+	Message
+	exit 0
+}
 
 [[ $append_hist != true ]] && true > "$DEL_HST"
 for file in "$@"; do
